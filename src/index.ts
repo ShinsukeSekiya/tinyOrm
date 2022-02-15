@@ -3,7 +3,7 @@ import * as types from "./types";
 export * from "./types";
 // HELPER
 import * as helper from "./helper";
-import { Database, Connection } from "./database/database";
+import { Connection, QueryResult } from "./database/database";
 
 // 条件文の演算子（実際にSQLにするときは「_」は削除する）
 export const OP = {
@@ -165,42 +165,42 @@ export const remove = <T>( params: types.DeleteParams<T> )=>{
 //
 //  テーブル（とタイプ）を指定してまとめてCRUDの処理を行えるマップを取得
 //  
-type Prediction = (sql: string, replacement: any )=>[string, {[key:string]: any}] ;
-export const table = <T>( table: string, delay: Prediction )=>{
+
+
+type SqlResult = readonly [string, {[key:string]: any}] ;
+
+export const table = <T, Y>( table: string, next?: (x: SqlResult)=>Y )=>{
     return {
         select: ( x: Omit<types.SelectParams<T>,"from"> )=>{
-            return select<T>({ ...x, from: table });
+            const $ = select<T>({ ...x, from: table });
+            return next ? next($) : $;
         },
         update: ( x: Omit<types.UpdateParams<T>,"table"> )=>{
-            return update<T>({ ...x, table: table });
+            const $ = update<T>({ ...x, table: table });
+            return next ? next($) : $;
         },
         insert: ( x: Omit<types.InsertParams<T>,"into"> )=>{
-            return insert<T>({ ...x, into: table });
+            const $ = insert<T>({ ...x, into: table });
+            return next ? next($) : $;
         },
         remove: ( x: Omit<types.DeleteParams<T>,"from"> )=>{
-            return remove<T>({ ...x, from: table });
+            const $ = remove<T>({ ...x, from: table });
+            return next ? next($) : $;
         }
     }
 };
 
-//
-//
-//
-export const connect = <T>( table: string, db: Database, readDb?: Database )=>{
-    return {
-        select: ( x: Omit<types.SelectParams<T>,"from"> )=>{
-            const {sql, replacement} =  select<T>({ ...x, from: table });
 
-        },
-        update: ( x: Omit<types.UpdateParams<T>,"table"> )=>{
-            const {sql, replacement} =  update<T>({ ...x, table: table });
-        },
-        insert: ( x: Omit<types.InsertParams<T>,"into"> )=>{
-            const {sql, replacement} =  insert<T>({ ...x, into: table });
-        },
-        remove: ( x: Omit<types.DeleteParams<T>,"from"> )=>{
-            const {sql, replacement} =  remove<T>({ ...x, from: table });
-        }
-    }
+
+//
+//
+//
+export const connect = <T>( _table: string, connection: Connection )=>{
+    return table<T, Promise<QueryResult<T>>>(_table, ([sql, replacement])=>{
+        return connection.query<T>(sql, replacement);
+    })
 };
+
+const conn = ({} as Connection);
+const User = connect("Users", conn)
 
