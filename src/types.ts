@@ -5,9 +5,9 @@ import {OP} from ".";
 //
 
 // SELECT
-export type FindParams<T> = {
+export type SelectParams<T> = {
     from: string;
-    select: Field<T>[]|string;
+    fields: Field<T>[]|string;
     where?: TheCondition<T>|string;
     offset?: number;
     limit?: number;

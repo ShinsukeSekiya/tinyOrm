@@ -3,6 +3,7 @@ import * as types from "./types";
 export * from "./types";
 // HELPER
 import * as helper from "./helper";
+import { Database, Connection } from "./database/database";
 
 // 条件文の演算子（実際にSQLにするときは「_」は削除する）
 export const OP = {
@@ -30,16 +31,16 @@ export const OP = {
 //
 //
 //
-export const find = <T>(params: types.FindParams<T>)=>{
+export const select = <T>(params: types.SelectParams<T>)=>{
     const replacer = new helper.Replacer();
     // クエリ文字列を組み立てる
     let sql: string[] = [];
-    // SELECT
-    if (typeof params.select == "string"){
-        sql.push(`SELECT ${params.select}`);
+    // FIELDS
+    if (typeof params.fields == "string"){
+        sql.push(`SELECT ${params.fields}`);
     } else {
         const _f: string [] = [];
-        for(let item of helper.normalizeFields(params.select)){
+        for(let item of helper.normalizeFields(params.fields)){
             if (item.type === "ASTARISK"){
                 _f.push("*")
             } else if (item.type === "NORMAL"){
@@ -82,7 +83,10 @@ export const find = <T>(params: types.FindParams<T>)=>{
         sql.push(`ORDER BY ${x.join(", ")}`);
     }
     //
-    return [sql.join("\n"), replacer.map];
+    return [
+        sql.join("\n"), 
+        replacer.map,
+    ] as const;
 };
 
 //
@@ -106,7 +110,10 @@ export const update = <T>( paramsList: types.UpdateParams<T>|types.UpdateParams<
         sql.push(";");
     }
     //
-    return [sql.join("\n"), replacer.map];
+    return [
+        sql.join("\n"), 
+        replacer.map,
+    ] as const;
 };
 
 //
@@ -124,7 +131,10 @@ export const insert = <T>( paramsList: types.InsertParams<T>|types.InsertParams<
         sql.push(";");
     }
     //
-    return [sql.join("\n"), replacer.map];
+    return [
+        sql.join("\n"), 
+        replacer.map,
+    ] as const;
 };
 
 //
@@ -146,5 +156,51 @@ export const remove = <T>( params: types.DeleteParams<T> )=>{
     sql.push(";");
 
     //
-    return [sql.join("\n"), replacer.map];
+    return [
+        sql.join("\n"), 
+        replacer.map,
+    ] as const;
 };
+
+//
+//  テーブル（とタイプ）を指定してまとめてCRUDの処理を行えるマップを取得
+//  
+type Prediction = (sql: string, replacement: any )=>[string, {[key:string]: any}] ;
+export const table = <T>( table: string, delay: Prediction )=>{
+    return {
+        select: ( x: Omit<types.SelectParams<T>,"from"> )=>{
+            return select<T>({ ...x, from: table });
+        },
+        update: ( x: Omit<types.UpdateParams<T>,"table"> )=>{
+            return update<T>({ ...x, table: table });
+        },
+        insert: ( x: Omit<types.InsertParams<T>,"into"> )=>{
+            return insert<T>({ ...x, into: table });
+        },
+        remove: ( x: Omit<types.DeleteParams<T>,"from"> )=>{
+            return remove<T>({ ...x, from: table });
+        }
+    }
+};
+
+//
+//
+//
+export const connect = <T>( table: string, db: Database, readDb?: Database )=>{
+    return {
+        select: ( x: Omit<types.SelectParams<T>,"from"> )=>{
+            const {sql, replacement} =  select<T>({ ...x, from: table });
+
+        },
+        update: ( x: Omit<types.UpdateParams<T>,"table"> )=>{
+            const {sql, replacement} =  update<T>({ ...x, table: table });
+        },
+        insert: ( x: Omit<types.InsertParams<T>,"into"> )=>{
+            const {sql, replacement} =  insert<T>({ ...x, into: table });
+        },
+        remove: ( x: Omit<types.DeleteParams<T>,"from"> )=>{
+            const {sql, replacement} =  remove<T>({ ...x, from: table });
+        }
+    }
+};
+

@@ -5,7 +5,7 @@ import test, { ExecutionContext } from "ava";
 //import * as types from "../types";
 import {User} from "./types";
 import {
-    find
+    select
 } from "..";
 import { Database } from "../database/database";
 
@@ -30,8 +30,8 @@ test.after(async () => {
 //
 //
 test.serial("xxx", (t) => {
-    const x = find<User>({
-        select: ["id","name","age",{XXX: "count(id)"}],
+    const x = select<User>({
+        fields: ["id","name","age",{XXX: "count(id)"}],
         from: "Users",
         where: [
             {
@@ -55,9 +55,4 @@ test.serial("xxx", (t) => {
     t.is(1,1)
 });
 
-const tinyOrm = (db: Database, readDb: Database)=>{
-    User: {
-        find: ()=>find<User>({from: "Users"})
-    }
-};
 
