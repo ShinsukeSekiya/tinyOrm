@@ -19,19 +19,3 @@ export const connect = ( params: {
                     master;
     return {master, read};
 };
-
-/*
-export const db = connect({
-    config: {
-        url: process.env.DATABASE_URL 
-    },
-    option: {
-        // プレーフォルダの使い方。true=> クエリで「:key」プレースホルダで {key: 値}、false=> クエリで「?」プレースホルダで [値]。
-        usePlaceHolderAsKeyValue: true,
-        // SQL実行のログを出力するか
-        logging: true,
-        // ロガー
-        logger: console.log,
-    }
-})
-*/

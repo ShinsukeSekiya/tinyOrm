@@ -4,7 +4,7 @@
 import test, { ExecutionContext } from "ava";
 //import * as types from "../types";
 import {User} from "./types";
-import * as tinyOrm from "../";
+import * as tinyOrm from "../api";
 
 test.before(async () => {
     // nop

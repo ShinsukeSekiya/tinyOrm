@@ -1,10 +1,7 @@
 // TYPES
 import * as types from "./types";
 export * from "./types";
-import * as testTypes from "./test/types";
-// HELPER
 import * as helper from "./helper";
-import { Connection, QueryResult } from "./database/database";
 
 // 条件文の演算子（実際にSQLにするときは「_」は削除する）
 export const OP = {
@@ -24,7 +21,6 @@ export const OP = {
     BETWEEN: "BETWEEN",
     NOTBETWEEN: "NOT_BETWEEN",
 } as const;
-
 
 
 // MAIN - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -162,39 +158,3 @@ export const remove = <T>( params: types.DeleteParams<T> )=>{
         replacer.map,
     ] as const;
 };
-
-//
-//  テーブル（とタイプ）を指定してまとめてCRUDの処理を行えるマップを取得
-//  
-export const table = <T>( table: string )=>{
-    return {
-        select: ( x: Omit<types.SelectParams<T>,"from">, connection: Connection )=>{
-            const [sql, rep] = select<T>({ ...x, from: table });
-            return connection.query<T>(sql, rep);
-        
-        },
-        update: ( x: Omit<types.UpdateParams<T>,"table">, connection: Connection)=>{
-            const [sql, rep] = update<T>({ ...x, table: table });
-            return connection.query<T>(sql, rep);
-        },
-        insert: ( x: Omit<types.InsertParams<T>,"into">, connection: Connection )=>{
-            const [sql, rep] = insert<T>({ ...x, into: table });
-            return connection.query<T>(sql, rep);
-        },
-        remove: ( x: Omit<types.DeleteParams<T>,"from">, connection: Connection )=>{
-            const [sql, rep] = remove<T>({ ...x, from: table });
-            return connection.query<T>(sql, rep);
-        }
-    }
-};
-
-
-
-/*
-const conn = ({} as Connection);
-const User = table<testTypes.User>("Users");
-const xxx = User.select({
-    fields: ["age"],
-}, conn);
-
-*/
