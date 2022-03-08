@@ -23,7 +23,7 @@ const User = tinyOrm.table<types.User>("Users");
 
 db.transaction((t)=>{
     const users = User.select({
-        fields: {maleCount: "COUNT(id)"},
+        fields: [{maleCount: "COUNT(id)"}],
         where: "gender = 'MALE' AND type='human' AND deletedAt IS NULL",
         groupBy: ["gender"]
     }, t);
