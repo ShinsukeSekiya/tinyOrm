@@ -22,15 +22,15 @@ ava_1.default.after(async () => {
 //
 //
 //
-ava_1.default.serial("オブジェクト", async (t) => {
+ava_1.default.serial("WHEREの条件オブジェクト", async (t) => {
     const x = (0, helper_1.normalizeConditions)({
-        name: { "=": "a", IS: "b" },
+        firstName: { "=": "a", IS: "b" },
         age: { ">": 0, "<": 10 },
         married: { "=": true },
         ext: { IN: ["CSV", "JSON"], NOT_IN: ["TSV", "XML"] },
     });
-    t.deepEqual(x[0], { type: "VALUE$OPERATOR$FIELD", field: "name", operator: "=", value: "a", });
-    t.deepEqual(x[1], { type: "VALUE$OPERATOR$FIELD", field: "name", operator: "IS", value: "b", });
+    t.deepEqual(x[0], { type: "VALUE$OPERATOR$FIELD", field: "firstName", operator: "=", value: "a", });
+    t.deepEqual(x[1], { type: "VALUE$OPERATOR$FIELD", field: "firstName", operator: "IS", value: "b", });
     t.deepEqual(x[2], { type: "VALUE$OPERATOR$FIELD", field: "age", operator: ">", value: 0, });
     t.deepEqual(x[3], { type: "VALUE$OPERATOR$FIELD", field: "age", operator: "<", value: 10, });
     t.deepEqual(x[4], { type: "VALUE$OPERATOR$FIELD", field: "married", operator: "=", value: true, });
@@ -40,10 +40,10 @@ ava_1.default.serial("オブジェクト", async (t) => {
 //
 //
 //
-ava_1.default.serial("配列内の多層構造オブジェクト", async (t) => {
+ava_1.default.serial("配列内の多層構造WHEREの条件オブジェクト", async (t) => {
     const x = (0, helper_1.normalizeConditions)([
         {
-            name: { "=": "a", IS: "b" },
+            firstName: { "=": "a", IS: "b" },
             age: { ">": 0, "<": 10 },
         },
         "AND",
@@ -60,8 +60,8 @@ ava_1.default.serial("配列内の多層構造オブジェクト", async (t) => 
     ]);
     t.is(x[0].type, "GROUP");
     const x0 = x[0].conditions;
-    t.deepEqual(x0[0], { type: "VALUE$OPERATOR$FIELD", field: "name", operator: "=", value: "a", });
-    t.deepEqual(x0[1], { type: "VALUE$OPERATOR$FIELD", field: "name", operator: "IS", value: "b", });
+    t.deepEqual(x0[0], { type: "VALUE$OPERATOR$FIELD", field: "firstName", operator: "=", value: "a", });
+    t.deepEqual(x0[1], { type: "VALUE$OPERATOR$FIELD", field: "firstName", operator: "IS", value: "b", });
     t.deepEqual(x0[2], { type: "VALUE$OPERATOR$FIELD", field: "age", operator: ">", value: 0, });
     t.deepEqual(x0[3], { type: "VALUE$OPERATOR$FIELD", field: "age", operator: "<", value: 10, });
     t.deepEqual(x0[4], { type: "CONJUNCTION", andor: "AND", });

@@ -17,15 +17,9 @@ export declare const OP: {
     readonly BETWEEN: "BETWEEN";
     readonly NOTBETWEEN: "NOT_BETWEEN";
 };
-export declare const select: <T>(params: types.SelectParams<T>) => readonly [string, {
+export declare const select: <T>(params: types.SelectParams<T>, replacements?: types.ReplacementMap | undefined) => readonly [string, types.ReplacementMap];
+export declare const update: <T>(params: types.UpdateParams<T>, replacements?: types.ReplacementMap | undefined) => [string, {
     [key: string]: any;
 }];
-export declare const update: <T>(paramsList: types.UpdateParams<T> | types.UpdateParams<T>[]) => [string, {
-    [key: string]: any;
-}];
-export declare const insert: <T>(paramsList: types.InsertParams<T> | types.InsertParams<T>[]) => readonly [string, {
-    [key: string]: any;
-}];
-export declare const remove: <T>(params: types.DeleteParams<T>) => readonly [string, {
-    [key: string]: any;
-}];
+export declare const insert: <T>(params: types.InsertParams<T>, replacements?: types.ReplacementMap | undefined) => readonly [string, types.ReplacementMap];
+export declare const remove: <T>(params: types.DeleteParams<T>, replacements?: types.ReplacementMap | undefined) => readonly [string, types.ReplacementMap];

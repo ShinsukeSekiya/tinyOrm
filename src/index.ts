@@ -28,25 +28,25 @@ export const OP = {
 //
 //
 //
-export const select = <T>(params: types.SelectParams<T>)=>{
-    const replacer = new helper.Replacer();
+export const select = <T>(params: types.SelectParams<T>, replacements?: types.ReplacementMap )=>{
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
     // FIELDS
     if (typeof params.fields == "string"){
         sql.push(`SELECT ${params.fields}`);
     } else {
-        const _f: string [] = [];
+        const subsql: string [] = [];
         for(let item of helper.normalizeFields(params.fields)){
             if (item.type === "ASTARISK"){
-                _f.push("*")
+                subsql.push("*")
             } else if (item.type === "NORMAL"){
-                _f.push(`${replacer.field(item.field)}`);
+                subsql.push(`${replacer.field(item.field)}`);
             } else if (item.type === "LITERAL"){
-                _f.push(`${item.statement} AS ${replacer.field(item.alies)}`);
+                subsql.push(`${item.statement} AS ${replacer.field(item.alies)}`);
             }
         }
-        sql.push(`SELECT ${_f.join(", ")}`);
+        sql.push(`SELECT ${subsql.join(", ")}`);
     }
     // FROM
     sql.push(`FROM ${params.from}`);
@@ -58,7 +58,9 @@ export const select = <T>(params: types.SelectParams<T>)=>{
         sql.push(`WHERE ${x}`);
     }
     // ORDER BY
-    if ( params.orderBy !== undefined ){
+    if (typeof params.orderBy === "string"){
+        sql.push(`ORDER BY ${params.orderBy}`);
+    } else if (helper.isObject(params.orderBy)){
         const x: string[] = [];
         for(let field of helper.typedKeys(params.orderBy)){
             const item = params.orderBy[field];
@@ -75,13 +77,21 @@ export const select = <T>(params: types.SelectParams<T>)=>{
         sql.push(`OFFSET ${replacer.value(params.limit)}`);
     }
     // GROUP BY
-    if (params.grouBy !== undefined){
+    if (typeof params.grouBy === "string"){
+        sql.push(`GROUP BY ${params.grouBy}`);
+    } else if (Array.isArray(params.grouBy)){
         const x = params.grouBy.map((item)=>`${replacer.field(item)}`)
-        sql.push(`ORDER BY ${x.join(", ")}`);
+        sql.push(`GROUP BY ${x.join(", ")}`);
     }
-    //
+    // HAVING
+    if (typeof params.having === "string"){
+        sql.push(`HAVING ${params.having}`);
+    } else if (params.having !== undefined){
+        const x = helper.renderCondition<T>( helper.normalizeConditions<T>(params.having), replacer );
+        sql.push(`HAVING ${x}`);
+    }
     return [
-        sql.join("\n"), 
+        sql.join("\n") + ";", 
         replacer.map,
     ] as const;
 };
@@ -89,26 +99,26 @@ export const select = <T>(params: types.SelectParams<T>)=>{
 //
 //
 //
-export const update = <T>( paramsList: types.UpdateParams<T>|types.UpdateParams<T>[] )=>{
-    const replacer = new helper.Replacer();
+export const update = <T>( params: types.UpdateParams<T>, replacements?: types.ReplacementMap  )=>{
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
-    paramsList = Array.isArray(paramsList) ? paramsList : [paramsList];
-    for(let params of paramsList ){
-        sql.push(`UPDATE ${params.table}`);
+    
+    sql.push(`UPDATE ${params.table}`);
+    if (typeof params.set === "string"){
+        sql.push(`SET ${params.set}`);
+    } else {
         sql.push(`SET ${helper.renderSet(params.set, replacer)}`);
-        if (typeof params.where === "string"){
-            sql.push(`WHERE ${params.where}`);
-        } else if (params.where !== undefined){
-            const x = helper.renderCondition<T>( helper.normalizeConditions<T>(params.where), replacer );
-            sql.push(`WHERE ${x}`);
-        }
-        // 
-        sql.push(";");
     }
-    //
+    if (typeof params.where === "string"){
+        sql.push(`WHERE ${params.where}`);
+    } else if (params.where !== undefined){
+        const x = helper.renderCondition<T>( helper.normalizeConditions<T>(params.where), replacer );
+        sql.push(`WHERE ${x}`);
+    }
+
     return [
-        sql.join("\n"), 
+        sql.join("\n") + ";", 
         replacer.map,
     ] as [string, {[key:string]: any}];
 };
@@ -116,20 +126,22 @@ export const update = <T>( paramsList: types.UpdateParams<T>|types.UpdateParams<
 //
 //
 //
-export const insert = <T>( paramsList: types.InsertParams<T>|types.InsertParams<T>[] )=>{
-    const replacer = new helper.Replacer();
+export const insert = <T>( params: types.InsertParams<T>, replacements?: types.ReplacementMap  )=>{
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
-    paramsList = Array.isArray(paramsList) ? paramsList : [paramsList];
-    for(let params of paramsList ){
-        sql.push(`INSERT INTO ${params.into}`);
-        sql.push(`SET ${helper.renderSet(params.set, replacer)}`);
-        // 
-        sql.push(";");
-    }
+    const value$keys = Array.isArray(params.values) ? params.values : [params.values];
+    sql.push(`INSERT INTO ${params.into}`);
+    // 1つめの.setの内容からカラムを列挙
+    sql.push(`(${ Object.keys(value$keys[0]).map((key)=>replacer.field(key)).join(", ") })`);
+    const subsql: string[] = [];
+    value$keys.forEach( (value$key, idx)=>{
+        subsql.push(`/**/ ( ${ Object.values(value$keys).map((value)=>replacer.value(value)).join(", ") } )`);
+    });
+    sql.push(`VALUES ${subsql.join(", ")}`);
     //
     return [
-        sql.join("\n"), 
+        sql.join("\n") + ";", 
         replacer.map,
     ] as const;
 };
@@ -137,8 +149,8 @@ export const insert = <T>( paramsList: types.InsertParams<T>|types.InsertParams<
 //
 //
 //
-export const remove = <T>( params: types.DeleteParams<T> )=>{
-    const replacer = new helper.Replacer();
+export const remove = <T>( params: types.DeleteParams<T>, replacements?: types.ReplacementMap  )=>{
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
     
@@ -154,7 +166,7 @@ export const remove = <T>( params: types.DeleteParams<T> )=>{
 
     //
     return [
-        sql.join("\n"), 
+        sql.join("\n") + ";", 
         replacer.map,
     ] as const;
 };

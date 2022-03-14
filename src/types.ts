@@ -4,6 +4,9 @@ import {OP} from ".";
 //
 //
 
+// REPLACEMENTS
+export type ReplacementMap = {[key:string]: any};
+
 // SELECT
 export type SelectParams<T> = {
     from: string;
@@ -11,22 +14,40 @@ export type SelectParams<T> = {
     where?: TheCondition<T>|string;
     offset?: number;
     limit?: number;
-    orderBy?: OrderBy<T>;
-    grouBy?: (keyof T)[];
+    orderBy?: OrderBy<T>|string;
+    grouBy?: (keyof T)[]|string;
     having?: TheCondition<T>|string;
 }
 
 // UPDATE
 export type UpdateParams<T> = {
     table: string;
-    set: {[ FIELD in keyof T]?: T[FIELD] };
-    where: TheCondition<T>|string;
+    set: TSet<T>|string;
+    where?: TheCondition<T>|string;
 };
 
+// SET
+export type TSet<T> = {
+    [ FIELD in keyof T]?: T[FIELD] | (Case<T> | string )[]
+}
+
+// SET CASE WHEN 〜 ELSE
+export type CaseWhen<T, FIELD extends keyof T = keyof T> = {
+    when: TheCondition<T>|string, 
+    then?: T[FIELD], 
+    thenLiteral?: string;
+}
+export type CaseElse<T, FIELD extends keyof T = keyof T> = {
+    else?: T[FIELD];
+    elseField?: FIELD;
+}
+export type Case<T> = CaseWhen<T> | CaseElse<T>;
+
 // INSERT
+type InsertValues<T> = {[ FIELD in keyof T]?: T[FIELD] };
 export type InsertParams<T> = {
     into: string;
-    set: {[ FIELD in keyof T]?: T[FIELD] };
+    values: InsertValues<T> | InsertValues<T>[];
 };
 
 // DELETE 
@@ -106,5 +127,3 @@ export type NormalizedCondition<T> = {
     conditions: NormalizedCondition<T>[];
 };
 
-// SET
-export type TSet<T> = {[ FIELD in keyof T]?: T[FIELD] };

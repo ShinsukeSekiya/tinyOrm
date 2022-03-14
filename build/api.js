@@ -7,20 +7,20 @@ const _1 = require("./");
 //  
 const table = (table) => {
     return {
-        select: (x, connection) => {
-            const [sql, rep] = (0, _1.select)(Object.assign(Object.assign({}, x), { from: table }));
+        select: (connection, x, replacements) => {
+            const [sql, rep] = (0, _1.select)(Object.assign(Object.assign({}, x), { from: table }), replacements);
             return connection.query(sql, rep);
         },
-        update: (x, connection) => {
-            const [sql, rep] = (0, _1.update)(Object.assign(Object.assign({}, x), { table: table }));
+        update: (connection, x, replacements) => {
+            const [sql, rep] = (0, _1.update)(Object.assign(Object.assign({}, x), { table: table }), replacements);
             return connection.query(sql, rep);
         },
-        insert: (x, connection) => {
-            const [sql, rep] = (0, _1.insert)(Object.assign(Object.assign({}, x), { into: table }));
+        insert: (connection, x, replacements) => {
+            const [sql, rep] = (0, _1.insert)(Object.assign(Object.assign({}, x), { into: table }), replacements);
             return connection.query(sql, rep);
         },
-        remove: (x, connection) => {
-            const [sql, rep] = (0, _1.remove)(Object.assign(Object.assign({}, x), { from: table }));
+        remove: (connection, x, replacements) => {
+            const [sql, rep] = (0, _1.remove)(Object.assign(Object.assign({}, x), { from: table }), replacements);
             return connection.query(sql, rep);
         }
     };

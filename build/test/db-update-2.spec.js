@@ -26,14 +26,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ava_1 = __importDefault(require("ava"));
 //import * as tinyOrm from "../api";
-const tinyOrmCore = __importStar(require("../"));
+const tinyOrmCore = __importStar(require(".."));
 const db = __importStar(require("./db"));
 ava_1.default.before(async () => {
-    await db.dropTables();
-    await db.createTales();
 });
 ava_1.default.beforeEach(async () => {
-    // nop
+    await db.dropTables();
+    await db.createTales();
 });
 ava_1.default.afterEach.always(async () => {
     // nop
@@ -41,17 +40,34 @@ ava_1.default.afterEach.always(async () => {
 ava_1.default.after(async () => {
     // nop
 });
-//
-//
-//
-ava_1.default.serial.skip("custom Replacements", async (t) => {
-    const [sql, replacements] = tinyOrmCore.select({
-        fields: [{ A: ":aaa" }, { B: "@bbb" }],
-        from: "XXXUsers"
-    }, {
-        aaa: "999",
-        bbb: "name"
+ava_1.default.serial("実際にDBにアクセス: UPDATE、10万件をCASEを使って個別にUPDATEする", async (t) => {
+    const SIZE = 10;
+    const items = [];
+    for (let i = 1; i <= SIZE; i++) {
+        items.push({ id: null, firstName: `苗字${i}`, secondName: `名前${i}`, age: 0, gender: "MALE", ext: null, height: null, weight: null, hasPet: true });
+    }
+    console.log("!-2");
+    const [sql0, rep0] = tinyOrmCore.insert({
+        into: "XXXUsers",
+        values: items,
     });
-    const res = await db.connection.query(sql, replacements);
-    t.is(1, 1);
+    console.log("!-1");
+    await db.query(sql0, rep0);
+    console.log("!0");
+    const cases = [];
+    for (let i = 1; i <= SIZE; i++) {
+        // idごとに heightに値をふる。
+        cases.push({ when: { "id": { "=": i } }, then: i });
+    }
+    console.log("!1");
+    const [sql, replacements] = tinyOrmCore.update({
+        table: "XXXUsers",
+        set: { height: cases }
+    });
+    console.log("!2");
+    await db.query(sql, Object.assign({}, replacements), false);
+    const res = await db.query(`SELECT * FROM XXXUsers`);
+    t.is(res[0].height, 1);
+    t.is(res[4999].height, 5000);
+    t.is(res[9999].height, 10000);
 });

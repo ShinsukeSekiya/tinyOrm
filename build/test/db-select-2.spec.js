@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ava_1 = __importDefault(require("ava"));
 //import * as tinyOrm from "../api";
-const tinyOrmCore = __importStar(require("../"));
+const tinyOrmCore = __importStar(require(".."));
 const db = __importStar(require("./db"));
 ava_1.default.before(async () => {
 });
@@ -43,7 +43,7 @@ ava_1.default.after(async () => {
 //
 //
 //
-ava_1.default.serial("実際にDBにアクセス: SELECT", async (t) => {
+ava_1.default.serial("実際にDBにアクセス: SELECT、複雑なWHERE", async (t) => {
     const items = [
         { id: "1", firstName: "はずれ", secondName: "A", age: 0, gender: "MALE", ext: "CSV", height: 50, weight: 50, hasPet: false },
         { id: "2", firstName: "あたり", secondName: "B", age: 10, gender: "MALE", ext: "CSV", height: 50, weight: 50, hasPet: false },
@@ -96,34 +96,4 @@ ava_1.default.serial("実際にDBにアクセス: SELECT", async (t) => {
     t.is(res[2].fullName, "あたりE1");
     t.is(res[3].id, 2);
     t.is(res[3].fullName, "あたりB");
-});
-//
-ava_1.default.serial("実際にDBにアクセス: UPDATE", async (t) => {
-    const items = [
-        { id: "1", firstName: "苗字1", secondName: "A", age: 0, gender: "MALE", ext: "CSV", height: 50, weight: 50, hasPet: true },
-        { id: "2", firstName: "苗字2", secondName: "B", age: 0, gender: "MALE", ext: "CSV", height: 50, weight: 50, hasPet: true },
-        { id: "3", firstName: "苗字3", secondName: "C", age: 0, gender: "MALE", ext: "CSV", height: 50, weight: 50, hasPet: true },
-    ];
-    for (let item of items) {
-        await db.query(`INSERT INTO XXXUsers SET :set;`, { set: item });
-    }
-    // 1は、age 100に。
-    // 2は、age 200に。
-    // 3は、はもとのまま
-    const [sql, replacements] = tinyOrmCore.update({
-        table: "XXXUsers",
-        set: { age: [
-                { when: { id: { "=": 1 } }, then: 100 },
-                { when: { id: { "=": 2 } }, then: 200 },
-                { elseField: "age" },
-            ] },
-    });
-    //
-    await db.query(sql, Object.assign(Object.assign({}, replacements), { yyy: "age", xxx: 200 }), true);
-    //
-    const res = await db.query(`SELECT * FROM XXXUsers`);
-    //console.log(res);
-    t.is(res[0].age, 100);
-    t.is(res[1].age, 200);
-    t.is(res[2].age, 0);
 });

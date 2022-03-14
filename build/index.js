@@ -47,8 +47,8 @@ exports.OP = {
 //
 //
 //
-const select = (params) => {
-    const replacer = new helper.Replacer();
+const select = (params, replacements) => {
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql = [];
     // FIELDS
@@ -56,19 +56,19 @@ const select = (params) => {
         sql.push(`SELECT ${params.fields}`);
     }
     else {
-        const _f = [];
+        const subsql = [];
         for (let item of helper.normalizeFields(params.fields)) {
             if (item.type === "ASTARISK") {
-                _f.push("*");
+                subsql.push("*");
             }
             else if (item.type === "NORMAL") {
-                _f.push(`${replacer.field(item.field)}`);
+                subsql.push(`${replacer.field(item.field)}`);
             }
             else if (item.type === "LITERAL") {
-                _f.push(`${item.statement} AS ${replacer.field(item.alies)}`);
+                subsql.push(`${item.statement} AS ${replacer.field(item.alies)}`);
             }
         }
-        sql.push(`SELECT ${_f.join(", ")}`);
+        sql.push(`SELECT ${subsql.join(", ")}`);
     }
     // FROM
     sql.push(`FROM ${params.from}`);
@@ -81,7 +81,10 @@ const select = (params) => {
         sql.push(`WHERE ${x}`);
     }
     // ORDER BY
-    if (params.orderBy !== undefined) {
+    if (typeof params.orderBy === "string") {
+        sql.push(`ORDER BY ${params.orderBy}`);
+    }
+    else if (helper.isObject(params.orderBy)) {
         const x = [];
         for (let field of helper.typedKeys(params.orderBy)) {
             const item = params.orderBy[field];
@@ -98,13 +101,23 @@ const select = (params) => {
         sql.push(`OFFSET ${replacer.value(params.limit)}`);
     }
     // GROUP BY
-    if (params.grouBy !== undefined) {
-        const x = params.grouBy.map((item) => `${replacer.field(item)}`);
-        sql.push(`ORDER BY ${x.join(", ")}`);
+    if (typeof params.grouBy === "string") {
+        sql.push(`GROUP BY ${params.grouBy}`);
     }
-    //
+    else if (Array.isArray(params.grouBy)) {
+        const x = params.grouBy.map((item) => `${replacer.field(item)}`);
+        sql.push(`GROUP BY ${x.join(", ")}`);
+    }
+    // HAVING
+    if (typeof params.having === "string") {
+        sql.push(`HAVING ${params.having}`);
+    }
+    else if (params.having !== undefined) {
+        const x = helper.renderCondition(helper.normalizeConditions(params.having), replacer);
+        sql.push(`HAVING ${x}`);
+    }
     return [
-        sql.join("\n"),
+        sql.join("\n") + ";",
         replacer.map,
     ];
 };
@@ -112,27 +125,26 @@ exports.select = select;
 //
 //
 //
-const update = (paramsList) => {
-    const replacer = new helper.Replacer();
+const update = (params, replacements) => {
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql = [];
-    paramsList = Array.isArray(paramsList) ? paramsList : [paramsList];
-    for (let params of paramsList) {
-        sql.push(`UPDATE ${params.table}`);
-        sql.push(`SET ${helper.renderSet(params.set, replacer)}`);
-        if (typeof params.where === "string") {
-            sql.push(`WHERE ${params.where}`);
-        }
-        else if (params.where !== undefined) {
-            const x = helper.renderCondition(helper.normalizeConditions(params.where), replacer);
-            sql.push(`WHERE ${x}`);
-        }
-        // 
-        sql.push(";");
+    sql.push(`UPDATE ${params.table}`);
+    if (typeof params.set === "string") {
+        sql.push(`SET ${params.set}`);
     }
-    //
+    else {
+        sql.push(`SET ${helper.renderSet(params.set, replacer)}`);
+    }
+    if (typeof params.where === "string") {
+        sql.push(`WHERE ${params.where}`);
+    }
+    else if (params.where !== undefined) {
+        const x = helper.renderCondition(helper.normalizeConditions(params.where), replacer);
+        sql.push(`WHERE ${x}`);
+    }
     return [
-        sql.join("\n"),
+        sql.join("\n") + ";",
         replacer.map,
     ];
 };
@@ -140,20 +152,22 @@ exports.update = update;
 //
 //
 //
-const insert = (paramsList) => {
-    const replacer = new helper.Replacer();
+const insert = (params, replacements) => {
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql = [];
-    paramsList = Array.isArray(paramsList) ? paramsList : [paramsList];
-    for (let params of paramsList) {
-        sql.push(`INSERT INTO ${params.into}`);
-        sql.push(`SET ${helper.renderSet(params.set, replacer)}`);
-        // 
-        sql.push(";");
-    }
+    const value$keys = Array.isArray(params.values) ? params.values : [params.values];
+    sql.push(`INSERT INTO ${params.into}`);
+    // 1つめの.setの内容からカラムを列挙
+    sql.push(`(${Object.keys(value$keys[0]).map((key) => replacer.field(key)).join(", ")})`);
+    const subsql = [];
+    value$keys.forEach((value$key, idx) => {
+        subsql.push(`/**/ ( ${Object.values(value$keys).map((value) => replacer.value(value)).join(", ")} )`);
+    });
+    sql.push(`VALUES ${subsql.join(", ")}`);
     //
     return [
-        sql.join("\n"),
+        sql.join("\n") + ";",
         replacer.map,
     ];
 };
@@ -161,8 +175,8 @@ exports.insert = insert;
 //
 //
 //
-const remove = (params) => {
-    const replacer = new helper.Replacer();
+const remove = (params, replacements) => {
+    const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql = [];
     sql.push(`DELETE FROM ${params.from}`);
@@ -177,7 +191,7 @@ const remove = (params) => {
     sql.push(";");
     //
     return [
-        sql.join("\n"),
+        sql.join("\n") + ";",
         replacer.map,
     ];
 };

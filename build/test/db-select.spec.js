@@ -119,7 +119,7 @@ ava_1.default.serial("実際にDBにアクセス: UPDATE", async (t) => {
             ] },
     });
     //
-    await db.query(sql, Object.assign(Object.assign({}, replacements), { yyy: "age", xxx: 200 }), true);
+    await db.query(sql, Object.assign(Object.assign({}, replacements), { yyy: "age", xxx: 200 }), false);
     //
     const res = await db.query(`SELECT * FROM XXXUsers`);
     //console.log(res);

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.renderSet = exports.renderCondition = exports.normalizeConditions = exports.normalizeFields = exports.isValue$Operator$Field = exports.Replacer = exports.isObject = exports.typedKeys = void 0;
+exports.renderCase = exports.renderSet = exports.renderCondition = exports.normalizeConditions = exports.normalizeFields = exports.isValue$Operator$Field = exports.Replacer = exports.isObject = exports.typedKeys = void 0;
 const index_1 = require("./index");
 //
 // HELPER - - - - - - - - - - - - - - 
@@ -21,9 +21,9 @@ exports.isObject = isObject;
 // REPLACEMENT のユニークなキートマップを作成 
 //
 class Replacer {
-    constructor() {
+    constructor(initialMap) {
         this.idx = 0;
-        this.map = {};
+        this.map = initialMap ? initialMap : {};
     }
     field(value) {
         const key = `_${++this.idx}_`;
@@ -134,45 +134,45 @@ exports.normalizeConditions = normalizeConditions;
 //
 //
 //
-const renderCondition = (_cs, replacer) => {
+const renderCondition = (nconditions, replacer) => {
     const sql = [];
-    for (let i = 0; i < _cs.length; i++) {
-        const _c = _cs[i];
-        if (_c.type === "GROUP") {
+    for (let i = 0; i < nconditions.length; i++) {
+        const ncond = nconditions[i];
+        if (ncond.type === "GROUP") {
             // グループ（＝括弧）
-            sql.push(`( ${(0, exports.renderCondition)(_c.conditions, replacer)} )`);
+            sql.push(`( ${(0, exports.renderCondition)(ncond.conditions, replacer)} )`);
         }
-        else if (_c.type === "LITERAL") {
-            sql.push(_c.statement);
+        else if (ncond.type === "LITERAL") {
+            sql.push(ncond.statement);
         }
-        else if (_c.type === "CONJUNCTION") {
+        else if (ncond.type === "CONJUNCTION") {
             //ここでANDかORが有るのは構文エラー。
-            sql.push(_c.andor);
-            console.error(`構文エラー '${_c.andor}'`);
+            sql.push(ncond.andor);
+            console.error(`構文エラー '${ncond.andor}'`);
         }
-        else if (_c.type === "VALUE$OPERATOR$FIELD") {
+        else if (ncond.type === "VALUE$OPERATOR$FIELD") {
             // 条件のオブジェクト　{field: {"=": "100"}}
-            if (_c.operator === "IN" || _c.operator === "NOT_IN") {
+            if (ncond.operator === "IN" || ncond.operator === "NOT_IN") {
                 // IN
-                if (!Array.isArray(_c.value)) {
+                if (!Array.isArray(ncond.value)) {
                     throw new Error("invalid.");
                 }
-                sql.push(`${replacer.field(_c.field)} ${_c.operator.replace("_", " ")} (${replacer.value(_c.value)})`);
+                sql.push(`${replacer.field(ncond.field)} ${ncond.operator.replace("_", " ")} (${replacer.value(ncond.value)})`);
             }
-            else if (_c.operator === "BETWEEN" || _c.operator === "NOT_BETWEEN") {
+            else if (ncond.operator === "BETWEEN" || ncond.operator === "NOT_BETWEEN") {
                 // BETWEEN
-                if (!Array.isArray(_c.value) || _c.value.length !== 2) {
+                if (!Array.isArray(ncond.value) || ncond.value.length !== 2) {
                     throw new Error("invalid.");
                 }
-                sql.push(`${replacer.field(_c.field)} ${_c.operator.replace("_", " ")} ${replacer.value(_c.value[0])} AND ${replacer.value(_c.value[1])}`);
+                sql.push(`${replacer.field(ncond.field)} ${ncond.operator.replace("_", " ")} ${replacer.value(ncond.value[0])} AND ${replacer.value(ncond.value[1])}`);
             }
             else {
                 // それ以外
-                sql.push(`${replacer.field(_c.field)} ${_c.operator.replace("_", " ")} ${replacer.value(_c.value)}`);
+                sql.push(`${replacer.field(ncond.field)} ${ncond.operator.replace("_", " ")} ${replacer.value(ncond.value)}`);
             }
         }
         // 1つ次がANDかORが指定されてればそれを。なければAND。
-        const next = _cs[i + 1];
+        const next = nconditions[i + 1];
         if (next) {
             if (next.type === "CONJUNCTION") {
                 sql.push(next.andor);
@@ -187,13 +187,54 @@ const renderCondition = (_cs, replacer) => {
 };
 exports.renderCondition = renderCondition;
 //
+//  CaseWhen 型のガード
+//
+const isCaseWhen = (x) => {
+    return (0, exports.isObject)(x) && x.hasOwnProperty("when") && (x.hasOwnProperty("then") || x.hasOwnProperty("thenLiteral"));
+};
+const isCaseElse = (x) => {
+    return (0, exports.isObject)(x) && (x.hasOwnProperty("else") || x.hasOwnProperty("elseField"));
+};
+//
 //
 //
 const renderSet = (set, replacer) => {
     const x = [];
     for (let field of (0, exports.typedKeys)(set)) {
-        x.push(`${replacer.field(field)} = ${replacer.value(set[field])}`);
+        const value = set[field];
+        if (Array.isArray(value)) {
+            // field = CASE WHEN 〜　ELSE 〜 END
+            x.push(`${replacer.field(field)} = ${(0, exports.renderCase)(value, replacer)}`);
+        }
+        else {
+            // field = value, field = value
+            x.push(`${replacer.field(field)} = ${replacer.value(value)}`);
+        }
     }
     return x.join(", ");
 };
 exports.renderSet = renderSet;
+//
+//
+//
+const renderCase = (caseItems, replacer) => {
+    const x = [];
+    x.push(`CASE`);
+    for (let item of caseItems) {
+        if (isCaseWhen(item)) {
+            x.push(`WHEN ${(0, exports.renderCondition)((0, exports.normalizeConditions)(item.when), replacer)} THEN ${item.thenLiteral ? item.thenLiteral : replacer.value(item.then)}`);
+        }
+        else if (isCaseElse(item)) {
+            x.push(`ELSE ${item.elseField ? replacer.field(item.elseField) : replacer.value(item.else)}`);
+        }
+        else if (typeof item === "string") {
+            x.push(item);
+        }
+        else {
+            throw new Error("invalid");
+        }
+    }
+    x.push(`END`);
+    return x.join("\n");
+};
+exports.renderCase = renderCase;

@@ -1,0 +1,6 @@
+#
+# .env for test
+#
+DATABASE_URL=mysql://root@127.0.0.1:3309/TestDb?timezone="+00:00"
+NODE_ENV=test
+

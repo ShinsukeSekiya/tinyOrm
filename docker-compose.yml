@@ -1,0 +1,13 @@
+version: '3.2'
+
+services:
+
+  db:
+    image: mysql:5.7
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    ports:
+      - 3309:3306
+    restart: always
+    environment:
+      MYSQL_DATABASE: TestDb
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
