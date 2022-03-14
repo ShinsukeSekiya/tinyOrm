@@ -132,11 +132,12 @@ export const insert = <T>( params: types.InsertParams<T>, replacements?: types.R
     let sql: string[] = [];
     const value$keys = Array.isArray(params.values) ? params.values : [params.values];
     sql.push(`INSERT INTO ${params.into}`);
+    const colmuns = helper.typedKeys(value$keys[0]);
     // 1つめの.setの内容からカラムを列挙
-    sql.push(`(${ Object.keys(value$keys[0]).map((key)=>replacer.field(key)).join(", ") })`);
+    sql.push(`(${ colmuns.map((key)=>replacer.field(key)).join(", ") })`);
     const subsql: string[] = [];
     value$keys.forEach( (value$key, idx)=>{
-        subsql.push(`/**/ ( ${ Object.values(value$keys).map((value)=>replacer.value(value)).join(", ") } )`);
+        subsql.push(`/**/ ( ${ colmuns.map((key)=>replacer.value(value$key[key])).join(", ") } )`);
     });
     sql.push(`VALUES ${subsql.join(", ")}`);
     //
