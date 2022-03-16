@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import test, { ExecutionContext } from "ava";
-import {User} from "./types";
-//import * as tinyOrm from "../api";
-import * as tinyOrmCore from "..";
-import * as db from "./db";
+import {User} from "../types";
+import * as tinyOrmCore from "../../";
+import * as db from "../db";
 
 test.before(async () => {
 });
@@ -14,9 +13,9 @@ test.beforeEach(async () => {
     await db.dropTables();
     await db.createTales();
     const items = [
-        { id:"1", firstName: "苗字1", secondName: "A", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true}, 
-        { id:"2", firstName: "苗字2", secondName: "B", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true}, 
-        { id:"3", firstName: "苗字3", secondName: "C", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true}, 
+        { id:"1", firstName: "苗字1", secondName: "A", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true, birthDay: new Date("2022-01-01")}, 
+        { id:"2", firstName: "苗字2", secondName: "B", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true, birthDay: new Date("2022-01-01")}, 
+        { id:"3", firstName: "苗字3", secondName: "C", age: 0, gender: "MALE", ext: null, height: 50, weight: 50, hasPet: true, birthDay: new Date("2022-01-01")}, 
     ];
     for( let item of items ){
         await db.query(`INSERT INTO XXXUsers SET :set;`, {set: item } );

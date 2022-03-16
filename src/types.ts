@@ -6,6 +6,7 @@ import {OP} from ".";
 
 // REPLACEMENTS
 export type ReplacementMap = {[key:string]: any};
+//export type ReplacementList = any[];
 
 // SELECT
 export type SelectParams<T> = {
@@ -31,7 +32,7 @@ export type TSet<T> = {
     [ FIELD in keyof T]?: T[FIELD] | (Case<T> | string )[]
 }
 
-// SET CASE WHEN 〜 ELSE
+// CASE WHEN 〜 ELSE
 export type CaseWhen<T, FIELD extends keyof T = keyof T> = {
     when: TheCondition<T>|string, 
     then?: T[FIELD], 
@@ -44,7 +45,7 @@ export type CaseElse<T, FIELD extends keyof T = keyof T> = {
 export type Case<T> = CaseWhen<T> | CaseElse<T>;
 
 // INSERT
-type InsertValues<T> = {[ FIELD in keyof T]?: T[FIELD] };
+export type InsertValues<T> = {[ FIELD in keyof T]?: T[FIELD] };
 export type InsertParams<T> = {
     into: string;
     values: InsertValues<T> | InsertValues<T>[];

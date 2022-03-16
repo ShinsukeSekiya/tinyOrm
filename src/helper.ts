@@ -18,24 +18,25 @@ export const isObject = (x: any): x is object =>{
 };
 
 //
-// REPLACEMENT のユニークなキートマップを作成 
+// REPLACEMENT 
+// placeholderとして、リスト(配列)とユニークなマップを作成。
 //
 export class Replacer {
     idx: number;
     map: types.ReplacementMap;
-    constructor( initialMap?: types.ReplacementMap ){
+    constructor( initialValue?: types.ReplacementMap ){
         this.idx = 0;
-        this.map = initialMap ? initialMap : {};
+        this.map = initialValue ? initialValue : {};
     }
     field(value: any){
         const key = `_${++this.idx}_`;
         this.map[key] = value;
-        return `@${key}`;
+        return `@${key}`
     }
     value(value: any){
         const key = `_${++this.idx}_`;
         this.map[key] = value;
-        return `:${key}`;
+        return `:${key}`
     }
 }
 

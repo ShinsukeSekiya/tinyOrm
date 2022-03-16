@@ -2,11 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import test, { ExecutionContext } from "ava";
-import * as types from "../types";
-import {User} from "./types";
+import * as types from "../../types";
+import {User} from "../types";
 import {
     normalizeConditions,
-} from "../helper";
+} from "../../helper";
 
 test.before(async () => {
     // nop
@@ -28,7 +28,7 @@ test.after(async () => {
 //
 //
 //
-test.serial("WHEREの条件オブジェクト", async (t) => {
+test.serial("条件文の正規化：条件オブジェクト", async (t) => {
     const x = normalizeConditions<User>(
         {
             firstName: {"=": "a", IS: "b"},
@@ -49,7 +49,7 @@ test.serial("WHEREの条件オブジェクト", async (t) => {
 //
 //
 //
-test.serial("配列内の多層構造WHEREの条件オブジェクト", async (t) => {
+test.serial("条件文の正規化：条件オブジェクトの配列と多層構造", async (t) => {
     const x = normalizeConditions<User>(
         [
             {
@@ -91,3 +91,34 @@ test.serial("配列内の多層構造WHEREの条件オブジェクト", async (t
     t.deepEqual(x093[0], {type:"VALUE$OPERATOR$FIELD", field: "weight", operator: ">", value: 0,});
     t.deepEqual(x093[1], {type:"VALUE$OPERATOR$FIELD", field: "weight", operator: "<", value: 10,});
 });
+
+
+//
+//
+//
+test.serial("条件文の正規化：演算子", (t) => {
+    const x = normalizeConditions<User>({
+        hoge: {
+            "=": 100, "<>": 100, "<=>": 100, "<": 100, "<=": 100, ">": 100, ">=": 100,
+            "IS": null, "IS_NOT": null, "LIKE": "%xxx%", "NOT_LIKE": "%xxx%", 
+            "IN": [98,99,100], "NOT_IN": [198,199,200], "BETWEEN": [1,2], "NOT_BETWEEN": [3, 4],
+        }
+    });
+    t.deepEqual(x[0], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "=", value: 100});
+    t.deepEqual(x[1], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "<>", value: 100});
+    t.deepEqual(x[2], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "<=>", value: 100});
+    t.deepEqual(x[3], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "<", value: 100});
+    t.deepEqual(x[4], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "<=", value: 100});
+    t.deepEqual(x[5], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: ">", value: 100});
+    t.deepEqual(x[6], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: ">=", value: 100});
+    t.deepEqual(x[7], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "IS", value: null});
+    t.deepEqual(x[8], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "IS_NOT", value: null});
+    t.deepEqual(x[9], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "LIKE", value: "%xxx%"});
+    t.deepEqual(x[10], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "NOT_LIKE", value: "%xxx%"});
+    t.deepEqual(x[11], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "IN", value: [98,99,100]});
+    t.deepEqual(x[12], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "NOT_IN", value: [198,199,200]});
+    t.deepEqual(x[13], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "BETWEEN", value: [1,2]});
+    t.deepEqual(x[14], {type: "VALUE$OPERATOR$FIELD", field: "hoge", operator: "NOT_BETWEEN", value: [3,4]});
+    t.is(1,1)
+});
+    

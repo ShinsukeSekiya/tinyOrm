@@ -13,9 +13,16 @@ export const connection = mysql.createConnection(process.env.DATABASE_URL || "ox
 // QUERY
 export const query = <T = any>(sql: string, replacements?: any, logging?: boolean)=>{
     return new Promise<T[]>( (resolve, reject)=> {
-        const x = connection.query(
+        const x = connection.query({
             sql,
-            replacements || {}, 
+            values: replacements,
+            typeCast: (field, next) => {
+                if (field.type == 'TINY' && field.length == 1) {
+                    return (field.string() == '1'); // 1 = true, 0 = false
+                }
+                return next();
+            }
+        },
             (err, res)=>{
                 if(err) reject(err);
                 resolve(res);
@@ -26,7 +33,7 @@ export const query = <T = any>(sql: string, replacements?: any, logging?: boolea
 }
 
 
-// REPLACEMENTS
+// npm mysql ( REPLACEMENTS
 connection.config.queryFormat = (query, placeholders:undefined|{[key:string]:any})=>{
     if (!placeholders) return query;
     // オブジェクト{} だったら :key の置換に使う。
@@ -47,6 +54,7 @@ connection.config.queryFormat = (query, placeholders:undefined|{[key:string]:any
     });
     return x;
 };
+
 
 //
 export const dropTables = ()=>{
@@ -80,6 +88,7 @@ export const createTales = ()=>{
                 \`married\` tinyint(1) DEFAULT NULL,
                 \`hasPet\` tinyint(1) DEFAULT NULL,
                 \`deletedAt\` date DEFAULT NULL,
+                \`birthDay\` date NOT NULL,
                 PRIMARY KEY (\`id\`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
             `,

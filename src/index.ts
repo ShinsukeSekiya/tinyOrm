@@ -28,7 +28,7 @@ export const OP = {
 //
 //
 //
-export const select = <T>(params: types.SelectParams<T>, replacements?: types.ReplacementMap )=>{
+export const select = <T>(params: types.SelectParams<T>, replacements?: types.ReplacementMap)=>{
     const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
@@ -92,14 +92,14 @@ export const select = <T>(params: types.SelectParams<T>, replacements?: types.Re
     }
     return [
         sql.join("\n") + ";", 
-        replacer.map,
+        replacer.map
     ] as const;
 };
 
 //
 //
 //
-export const update = <T>( params: types.UpdateParams<T>, replacements?: types.ReplacementMap  )=>{
+export const update = <T>( params: types.UpdateParams<T>, replacements?: types.ReplacementMap )=>{
     const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
@@ -119,14 +119,14 @@ export const update = <T>( params: types.UpdateParams<T>, replacements?: types.R
 
     return [
         sql.join("\n") + ";", 
-        replacer.map,
+        replacer.map
     ] as [string, {[key:string]: any}];
 };
 
 //
 //
 //
-export const insert = <T>( params: types.InsertParams<T>, replacements?: types.ReplacementMap  )=>{
+export const insert = <T>( params: types.InsertParams<T>, replacements?: types.ReplacementMap )=>{
     const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
@@ -143,14 +143,14 @@ export const insert = <T>( params: types.InsertParams<T>, replacements?: types.R
     //
     return [
         sql.join("\n") + ";", 
-        replacer.map,
+        replacer.map
     ] as const;
 };
 
 //
 //
 //
-export const remove = <T>( params: types.DeleteParams<T>, replacements?: types.ReplacementMap  )=>{
+export const remove = <T>( params: types.DeleteParams<T>, replacements?: types.ReplacementMap )=>{
     const replacer = new helper.Replacer(replacements);
     // クエリ文字列を組み立てる
     let sql: string[] = [];
@@ -168,6 +168,6 @@ export const remove = <T>( params: types.DeleteParams<T>, replacements?: types.R
     //
     return [
         sql.join("\n") + ";", 
-        replacer.map,
+        replacer.map
     ] as const;
 };

@@ -11,4 +11,5 @@ export type User = {
     hasPet: boolean|null;
     deletedAt: Date|null;
     hoge: any;
+    birthDay: Date;
 }

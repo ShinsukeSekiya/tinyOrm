@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import test, { ExecutionContext } from "ava";
-import {User} from "./types";
-//import * as tinyOrm from "../api";
-import * as tinyOrmCore from "..";
-import * as db from "./db";
+import {User} from "../types";
+import * as tinyOrmCore from "../../";
+import * as db from "../db";
 
 test.before(async () => {
 });
@@ -14,11 +13,11 @@ test.beforeEach(async () => {
     await db.dropTables();
     await db.createTales();
     const items = [
-        { id:"1", firstName: "あ", secondName: "か", age: 10, gender: "MALE", ext: "CSV",       height: 50, weight: 10, hasPet: true}, 
-        { id:"2", firstName: "い", secondName: "き", age: 20, gender: "MALE", ext: "XML",       height: 50, weight: 50, hasPet: true}, 
-        { id:"3", firstName: "う", secondName: "く", age: 30, gender: "FEMALE", ext: "CSV",     height: 10, weight: 10, hasPet: true}, 
-        { id:"4", firstName: "え", secondName: "け", age: 40, gender: "FEMALE", ext: "XML",     height: 10, weight: 50, hasPet: true},
-        { id:"5", firstName: "お", secondName: "こ", age: 50, gender: "FEMALE", ext: "JSON",    height: 0, weight: 50, hasPet: false}, 
+        { id:"1", firstName: "あ", secondName: "か", age: 10, gender: "MALE", ext: "CSV",       height: 50, weight: 10, hasPet: true, birthDay: new Date("2022-01-01") }, 
+        { id:"2", firstName: "い", secondName: "き", age: 20, gender: "MALE", ext: "XML",       height: 50, weight: 50, hasPet: true, birthDay: new Date("2022-01-01") }, 
+        { id:"3", firstName: "う", secondName: "く", age: 30, gender: "FEMALE", ext: "CSV",     height: 10, weight: 10, hasPet: true, birthDay: new Date("2022-01-01") }, 
+        { id:"4", firstName: "え", secondName: "け", age: 40, gender: "FEMALE", ext: "XML",     height: 10, weight: 50, hasPet: true, birthDay: new Date("2022-01-01") },
+        { id:"5", firstName: "お", secondName: "こ", age: 50, gender: "FEMALE", ext: "JSON",    height: 0, weight: 50, hasPet: false, birthDay: new Date("2022-01-01") }, 
     ];
     for( let item of items ){
         await db.query(`INSERT INTO XXXUsers SET :set;`, {set: item } );

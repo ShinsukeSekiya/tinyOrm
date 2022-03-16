@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import test, { ExecutionContext } from "ava";
-import {User} from "./types";
-//import * as tinyOrm from "../api";
-import * as tinyOrmCore from "..";
-import * as db from "./db";
+import {User} from "../types";
+import * as tinyOrmCore from "../../";
+import * as db from "../db";
 
 test.before(async () => {
 });
@@ -23,22 +22,16 @@ test.after(async () => {
     // nop
 });
 
-
-test.serial("実際にDBにアクセス: UPDATE、大量の件数をCASEを使って個別にUPDATEする", async (t) => {
+// 時間がかかるのでこのテストはSKIP
+test.serial.skip("実際にDBにアクセス: UPDATE、大量の件数をCASEを使って個別にUPDATEする", async (t) => {
     const SIZE = 10000;
-    const items: any[] = [];
+    const values: any[] = [];
+
     for( let i = 1; i<=SIZE; i++ ){
-        items.push(
-            { id: null, firstName: `苗字${i}`, secondName: `名前${i}`, age: 0, gender: "MALE", ext: null, height: null, weight: null, hasPet: true}, 
-        );
+        values.push(`("苗字${i}", "名前${i}", 0, "MALE", NULL, NULL, NULL, false, "2022-01-01")`);
     }
-
-    const [sql0, rep0] =  tinyOrmCore.insert<User>({
-        into: "XXXUsers",
-        values: items,
-    });
-
-    await db.query(sql0, rep0);
+    // バルクインサート
+    await db.query(`INSERT INTO XXXUsers (firstName, secondName, age, gender, ext, height, weight, hasPet, birthDay) VALUES ${ values.join(", ")}`);
 
     const cases: tinyOrmCore.Case<User>[] = [];
     for( let i = 1; i<=SIZE; i++ ){

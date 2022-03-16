@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import test, { ExecutionContext } from "ava";
-import {User} from "./types";
-//import * as tinyOrm from "../api";
-import * as tinyOrmCore from "..";
-import * as db from "./db";
+import {User} from "../types";
+import * as tinyOrmCore from "../../";
+import * as db from "../db";
 
 test.before(async () => {
 });
@@ -26,11 +25,11 @@ test.after(async () => {
 
 test.serial("実際にDBにアクセス: REPLACEMENTS をユーザーが指定する", async (t) => {
     const items = [
-        { id:"1", firstName: "苗字1", secondName: "A", age: 0, gender: "MALE", hasPet: true}, 
-        { id:"2", firstName: "苗字2", secondName: "B", age: 0, gender: "MALE", hasPet: true}, 
-        { id:"3", firstName: "苗字3", secondName: "C", age: 0, gender: "MALE", hasPet: true}, 
-        { id:"4", firstName: "苗字4", secondName: "D", age: 0, gender: "MALE", hasPet: null}, // 対象外
-        { id:"5", firstName: "苗字5", secondName: "E", age: 0, gender: null, hasPet: true},  // 対象外
+        { id:"1", firstName: "苗字1", secondName: "A", age: 0, gender: "MALE", hasPet: true, birthDay: new Date("2022-01-01")}, 
+        { id:"2", firstName: "苗字2", secondName: "B", age: 0, gender: "MALE", hasPet: true, birthDay: new Date("2022-01-01")}, 
+        { id:"3", firstName: "苗字3", secondName: "C", age: 0, gender: "MALE", hasPet: true, birthDay: new Date("2022-01-01")}, 
+        { id:"4", firstName: "苗字4", secondName: "D", age: 0, gender: "MALE", hasPet: null, birthDay: new Date("2022-01-01")}, // 対象外
+        { id:"5", firstName: "苗字5", secondName: "E", age: 0, gender: null, hasPet: true, birthDay: new Date("2022-01-01")},  // 対象外
     ];
     for( let item of items ){
         await db.query(`INSERT INTO XXXUsers SET :set;`, {set: item } );
