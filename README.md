@@ -137,7 +137,18 @@ const [sql, replacements] = select<T>({
 });
 ```
 
-
+## update
+```
+  select<T>({
+    table: string,
+    set: {}
+    where?: string | Condiction<T>
+  },{
+    replacementKey1: replacementValue1,
+    replacementKey2: replacementValue2,
+    ....
+  }?)
+```
 
 
 # テスト
