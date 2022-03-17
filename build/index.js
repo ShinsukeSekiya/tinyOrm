@@ -98,7 +98,7 @@ const select = (params, replacements) => {
     }
     // OFFSET
     if (params.offset !== undefined) {
-        sql.push(`OFFSET ${replacer.value(params.limit)}`);
+        sql.push(`OFFSET ${replacer.value(params.offset)}`);
     }
     // GROUP BY
     if (typeof params.grouBy === "string") {

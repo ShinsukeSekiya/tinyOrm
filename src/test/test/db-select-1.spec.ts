@@ -138,13 +138,12 @@ test.serial("実際にDBにアクセス: SELECT LIMIT OFFSET", async (t) => {
     const [sql, replacements] = tinyOrmCore.select<UserExt>({
         fields: ["id"],
         from: "XXXUsers",
-        offset: 3,
-        limit: 2,
+        offset: 2,
+        limit: 1,
     });
 
     const res = await db.query<UserExt>(sql, replacements, false);
     
-    t.is(res.length, 2);
+    t.is(res.length, 1);
     t.is(res[0].id, 3);
-    t.is(res[1].id, 4);
 });
